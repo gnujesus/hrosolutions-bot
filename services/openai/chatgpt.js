@@ -16,7 +16,7 @@ class ChatGpt {
   openai2 = null
   queue = []
 
-  constructor () {
+  constructor() {
     const configuration = new Configuration({
       apiKey: process.env.OPENAI_API_KEY
     })
@@ -24,7 +24,7 @@ class ChatGpt {
     this.openai2 = new ChatGPTAPI(configuration)
   }
 
-  async completion (dataIn = '') {
+  async completion(dataIn = '') {
     try {
       const response = await this.openai.createChatCompletion({
         model: 'gpt-3.5-turbo',

@@ -50,10 +50,7 @@ const flowMenu = bot
     async (_, { flowDynamic }) => {
       const getMenu = await googelSheet.retriveDayMenu()
 
-      let menuString = ''
-
-      menuString += 'Te interesa alguno de nuestros productos? \n'
-
+      let menuString = 'Te interesa alguno de nuestros productos? \n'
       let id = 1
 
       for (const menu of getMenu) {
@@ -71,15 +68,14 @@ const flowMenu = bot
   .addAnswer(
     'Recuerda, por favor, seleccionar solo un numero a la vez de los disponibles entre las opciones.',
     { capture: true },
-    async (ctx, { gotoFlow, state }) => {
+    async (ctx, { gotoFlow }) => {
       // Log the items in the inventory to be sure everything's all right
       console.log(`ITEMS EN INVENTARIO [1-${productOptions.length}]: \n` + productOptions.join('\n'))
 
-      let txt = ctx.body
       const digitsRegexp = /\d+/gim
       const terminarRegexp = /terminar/gim
 
-      txt = digitsRegexp.test(txt) ? txt.match(digitsRegexp).join(' ') : txt
+      const txt = digitsRegexp.test(ctx.body) ? ctx.body.match(digitsRegexp).join(' ') : ctx.body
 
       if (terminarRegexp.test(txt)) {
         console.log('Terminado')
@@ -103,28 +99,25 @@ const flowMenu = bot
   .addAnswer(
     'De qué size desea su pedido? (si su pedido no incluye talla, escriba un punto ".")',
     { capture: true },
-    async (ctx, { gotoFlow, state }) => {
+    async (ctx) => {
       // Log the items in the inventory to be sure everything's all right
-      //
-      const txt = ctx.body
 
-      console.log('Spec: ', txt)
+      console.log('Spec: ', ctx.body)
       // state.update({ cantidad: txt })
-      orderSpecs.push(txt)
+      orderSpecs.push(ctx.body)
     }
   )
   .addAnswer(
     'Que cantidad desea?',
     { capture: true },
-    async (ctx, { gotoFlow, state }) => {
+    async (ctx, { gotoFlow }) => {
       // Log the items in the inventory to be sure everything's all right
       //
-      let txt = ctx.body
       const digitsRegexp = /\d+/gim
 
-      txt = digitsRegexp.test(txt)
-        ? parseInt(txt.match(digitsRegexp).join(' '))
-        : txt
+      const txt = digitsRegexp.test(ctx.body)
+        ? parseInt(ctx.body.match(digitsRegexp).join(' '))
+        : ctx.body
 
       if (typeof txt === 'number' && txt > 0) {
         console.log('Cantidad : ', txt)
@@ -138,34 +131,20 @@ const flowMenu = bot
   .addAnswer(
     'Desea algo mas? \n\n1. Sí \n2. No \n\nCualquier opción fuera del menú se interpreta como "no"',
     { capture: true },
-    async (ctx, { gotoFlow, state }) => {
+    async (ctx, { gotoFlow }) => {
       // Log the items in the inventory to be sure everything's all right
       //
-      let txt = ctx.body
       const digitsRegexp = /\d+/gim
 
-      txt = digitsRegexp.test(txt)
-        ? parseInt(txt.match(digitsRegexp).join(' '))
-        : txt
+      const txt = digitsRegexp.test(ctx.body)
+        ? parseInt(ctx.body.match(digitsRegexp).join(' '))
+        : ctx.body
 
       if (txt === 1) {
         return gotoFlow(flowMenu)
       } else {
         return gotoFlow(flowPedido)
       }
-    }
-  )
-
-const flowSalir = bot
-  .addKeyword(bot.EVENTS.ACTION)
-  .addAnswer(
-    'Saliendo...',
-    null,
-    async (_, { gotoFlow }) => {
-      order = []
-      orderSpecs = []
-      orderQuantity = []
-      return gotoFlow(flowPrincipal)
     }
   )
 
@@ -194,23 +173,15 @@ const flowPedido = bot
   .addAnswer(
     'De que manera desea pagar? (Selecciona un número) \n1. Efectivo \n2. Transferencia Bancaria',
     { capture: true },
-    async (ctx, { state, gotoFlow, flowDynamic, fallBack }) => {
-      let txt = ctx.body
+    async (ctx, { state, flowDynamic, fallBack }) => {
       const digitsRegexp = /\d+/gim
 
-      txt = digitsRegexp.test(txt) ? txt.match(digitsRegexp).join(' ') : txt
-
-      console.log(txt)
+      const txt = digitsRegexp.test(ctx.body) ? ctx.body.match(digitsRegexp).join(' ') : ctx.body
 
       const paymentOption = paymentOptions.includes(paymentOptions[parseInt(txt) - 1]) ? paymentOptions[parseInt(txt) - 1] : null
 
-      console.log(paymentOption)
-
-      console.log(paymentOptions.includes(paymentOption))
-
       if (paymentOptions.includes(paymentOption)) {
         console.log('Metodo de pago: ', paymentOption)
-
         state.update({ tipoPago: paymentOption })
       } else {
         flowDynamic('Por favor, selecciona un metodo de pago valido')
@@ -226,15 +197,14 @@ const flowPedido = bot
     }
   )
   .addAnswer(
-    'Quieres un resumen de tu pedido? \n\n1. Sí \n2. No \n\nCualquier número fuera de las opciones se interpreta como "sí"',
+    'Quiere un resumen de su pedido? \n\n1. Sí \n2. No \n\nCualquier número fuera de las opciones se interpreta como "sí"',
     { capture: true },
-    async (ctx, { gotoFlow, state, flowDynamic }) => {
-      let txt = ctx.body
+    async (ctx, { state, flowDynamic }) => {
       const digitsRegexp = /\d+/gim
 
-      txt = digitsRegexp.test(txt)
-        ? parseInt(txt.match(digitsRegexp).join(' '))
-        : txt
+      const txt = digitsRegexp.test(ctx.body)
+        ? parseInt(ctx.body.match(digitsRegexp).join(' '))
+        : ctx.body
 
       if (txt === 2) {
         return
@@ -256,13 +226,12 @@ const flowPedido = bot
   .addAnswer(
     'Desea añadir algo a su pedido \n\n1. Sí (mostrar menú) \n2. No \n\nCualquier opción fuera del menú se interpreta como "no"',
     { capture: true },
-    async (ctx, { state, gotoFlow, flowDynamic }) => {
-      let txt = ctx.body
+    async (ctx, { gotoFlow }) => {
       const digitsRegexp = /\d+/gim
 
-      txt = digitsRegexp.test(txt)
-        ? parseInt(txt.match(digitsRegexp).join(' '))
-        : txt
+      const txt = digitsRegexp.test(ctx.body)
+        ? parseInt(ctx.body.match(digitsRegexp).join(' '))
+        : ctx.body
 
       if (txt === 1) {
         return gotoFlow(flowMenu)
@@ -335,7 +304,6 @@ const main = async () => {
     flowPrincipal,
     flowMenu,
     flowPedido,
-    flowSalir,
     flowEmpty
   ])
   const adapterProvider = bot.createProvider(BaileysProvider)
